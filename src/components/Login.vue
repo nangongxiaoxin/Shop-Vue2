@@ -21,7 +21,7 @@
                 </el-form-item>
                 <!-- button -->
                 <el-form-item class="btns">
-                    <el-button type="primary">登录</el-button>
+                    <el-button type="primary" @click="login">登录</el-button>
                     <el-button type="info" @click="resetLoginForm">重置</el-button>
                 </el-form-item>
             </el-form>
@@ -31,12 +31,13 @@
 
 <script>
 export default {
+    name:'Login',
     data() {
         return {
             // 登录表单绑定数据
             loginForm: {
-                username: '',
-                password: '',
+                username: 'admin',
+                password: '123456',
             },
             // 表单验证规则
             loginFormRules: {
@@ -54,8 +55,36 @@ export default {
 
     methods: {
         // 点击重置按钮
-        resetLoginForm(){
+        resetLoginForm() {
             this.$refs.loginFormRef.resetFields();
+        },
+        // 登录
+        login() {
+            // 预校验 valid表示结果
+            this.$refs.loginFormRef.validate(async valid => {
+                if (!valid) return;
+                
+                // php测试
+                // const { data: res } = await this.$http.post('login.php', this.loginForm);
+                // if (res.CODE != 200) {
+                //     return this.$message.error('登陆失败！');
+                // } else {
+                //     console.log('登录成功');
+                //     this.$message.success('登陆成功！')
+                // }
+
+                //本地测试 
+                const {data: res}=await this.$http.post('login',this.loginForm);
+                if (res.meta.status != 200) {
+                    return this.$message.error('登陆失败！');
+                } else {
+                    console.log('登录成功');
+                    this.$message.success('登陆成功！')
+                }
+                window.sessionStorage.setItem('token',res.data.token);
+                this.$router.push('/home');
+
+            })
         }
     },
 }
