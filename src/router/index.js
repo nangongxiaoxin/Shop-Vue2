@@ -26,10 +26,10 @@ router.beforeEach((to, from, next) => {
   // if(!tokenStr) return next ('/login')
   // next()
 
-  const tokenStr=window.sessionStorage.getItem('token')
-  if(to.path==='/login'||tokenStr){
+  const tokenStr = window.sessionStorage.getItem('token')
+  if (to.path === '/login' || tokenStr) {
     return next()
-  }else{
+  } else {
     return next('/login')
   }
 })
