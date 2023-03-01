@@ -20,10 +20,17 @@ router.beforeEach((to, from, next) => {
   // from来自于哪个路径
   // 是否放行到next所确定的路径(表示放行)
 
-  if (to.path === '/login') return next()
-  // 获取token
+  // if (to.path === '/login') return next()
+  // // 获取token
+  // const tokenStr=window.sessionStorage.getItem('token')
+  // if(!tokenStr) return next ('/login')
+  // next()
+
   const tokenStr=window.sessionStorage.getItem('token')
-  if(!tokenStr) return next ('/login')
-  next()
+  if(to.path==='/login'||tokenStr){
+    return next()
+  }else{
+    return next('/login')
+  }
 })
 export default router
