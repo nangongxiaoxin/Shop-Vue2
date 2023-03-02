@@ -20,6 +20,12 @@ axios.defaults.baseURL = 'http://127.0.0.1:8888/api/private/v1/'
 // php测试
 // axios.defaults.baseURL='http://106.54.162.248/'
 
+axios.interceptors.request.use(config=>{
+  config.headers.Authorization=window.sessionStorage.getItem('token')
+  // 必须
+  return config
+})
+
 
 new Vue({
   router,

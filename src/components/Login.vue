@@ -106,9 +106,9 @@ export default {
 
         // 设置session
         window.sessionStorage.setItem('token', res.data.token)
-        // 设置cookie
-        document.cookie =
-          'Auth=' + res.data.token + '; max-age=' + 30 * 24 * 60 * 60
+        // // 设置cookie
+        // document.cookie =
+        //   'Auth=' + res.data.token + '; max-age=' + 30 * 24 * 60 * 60
         this.$router.push('/home')
       })
     },
