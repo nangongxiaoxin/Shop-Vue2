@@ -12,12 +12,23 @@
       <!-- 搜索与添加区 -->
       <el-row :gutter="20">
         <el-col :span="7">
-          <el-input placeholder="请输入内容">
-            <el-button slot="append" icon="el-icon-search"> </el-button>
+          <el-input
+            placeholder="请输入内容"
+            v-model="queryInfo.query"
+            clearable
+            @clear="getUserList"
+          >
+            <el-button
+              slot="append"
+              icon="el-icon-search"
+              @click="getUserList"
+            ></el-button>
           </el-input>
         </el-col>
         <el-col :span="4">
-          <el-button type="primary"> 添加用户 </el-button>
+          <el-button type="primary" @click="addDialogVisible = true">
+            添加用户
+          </el-button>
         </el-col>
       </el-row>
 
@@ -30,7 +41,10 @@
         <el-table-column label="角色" prop="role_name"></el-table-column>
         <el-table-column label="状态">
           <template slot-scope="scope">
-            <el-switch v-model="scope.row.mg_state"></el-switch>
+            <el-switch
+              v-model="scope.row.mg_state"
+              @change="userStateChanged(scope.row)"
+            ></el-switch>
           </template>
         </el-table-column>
         <el-table-column label="操作">
@@ -75,6 +89,28 @@
         :total="total"
       >
       </el-pagination>
+
+      <!-- 添加用户的对话框 -->
+      <el-dialog title="提示" :visible.sync="addDialogVisible" width="50%">
+        <!-- 内容主体区 -->
+        <el-form
+          :model="addForm"
+          :rules="addFormRules"
+          ref="addFormRef"
+          label-width="70px"
+        >
+          <el-form-item label="用户名" prop="username">
+            <el-input v-model="ruleForm.name"></el-input>
+          </el-form-item>
+        </el-form>
+        <!-- 底部区域 -->
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="addDialogVisible = false">取 消</el-button>
+          <el-button type="primary" @click="addDialogVisible = false"
+            >确 定</el-button
+          >
+        </span>
+      </el-dialog>
     </el-card>
   </div>
 </template>
@@ -93,6 +129,22 @@ export default {
       },
       userlist: [],
       total: 0,
+      //  用户对话框的显示与隐藏
+      addDialogVisible: false,
+      // 添加用户的表单数据
+      addForm: {},
+      // 添加表单的验证规则对象
+      addFormRules: {
+        username: [
+          { required: true, message: '请输入用户名', trigger: 'blur' },
+          {
+            min: 3,
+            max: 10,
+            message: '用户名的长度在3-10位之间',
+            trigger: 'blur',
+          },
+        ],
+      },
     }
   },
   created() {
@@ -112,17 +164,29 @@ export default {
     },
 
     // 监听pagesize改变的事件
-    handleSizeChange(newSize){
+    handleSizeChange(newSize) {
       console.log(newSize)
-      this.queryInfo.pagesize=newSize
+      this.queryInfo.pagesize = newSize
       this.getUserList()
     },
     // 监听页码值改变的事件
-    handleCurrentChange(newPage){
+    handleCurrentChange(newPage) {
       console.log(newPage)
-      this.queryInfo.pagenum=newPage
+      this.queryInfo.pagenum = newPage
       this.getUserList()
-    }
+    },
+    // 监听switch开关的状态的改变
+    async userStateChanged(userinfo) {
+      console.log(userinfo)
+      const { data: res } = await this.$http.put(
+        `users/${userinfo.id}/state/${userinfo.mg_state}`
+      )
+      if (res.meta.status !== 200) {
+        userinfo.mg_state = !userinfo.mg_state
+        return this.$message.error('更新用户信息失败!')
+      }
+      this.$message.success('更新用户状态成功!')
+    },
   },
 }
 </script>
