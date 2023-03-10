@@ -54,6 +54,7 @@
               type="primary"
               icon="el-icon-edit"
               size="mini"
+              @click="showEditDialog(scope.row.id)"
             ></el-button>
             <!-- 删除按钮 -->
             <el-button
@@ -91,7 +92,12 @@
       </el-pagination>
 
       <!-- 添加用户的对话框 -->
-      <el-dialog title="提示" :visible.sync="addDialogVisible" width="50%">
+      <el-dialog
+        title="添加用户"
+        :visible.sync="addDialogVisible"
+        width="50%"
+        @close="addDialogClosed"
+      >
         <!-- 内容主体区 -->
         <el-form
           :model="addForm"
@@ -100,13 +106,35 @@
           label-width="70px"
         >
           <el-form-item label="用户名" prop="username">
-            <el-input v-model="ruleForm.name"></el-input>
+            <el-input v-model="addForm.username"></el-input>
+          </el-form-item>
+          <el-form-item label="密码" prop="password">
+            <el-input v-model="addForm.password"></el-input>
+          </el-form-item>
+          <el-form-item label="邮箱" prop="email">
+            <el-input v-model="addForm.email"></el-input>
+          </el-form-item>
+          <el-form-item label="手机" prop="mobile">
+            <el-input v-model="addForm.mobile"></el-input>
           </el-form-item>
         </el-form>
         <!-- 底部区域 -->
         <span slot="footer" class="dialog-footer">
           <el-button @click="addDialogVisible = false">取 消</el-button>
-          <el-button type="primary" @click="addDialogVisible = false"
+          <el-button type="primary" @click="addUser">确 定</el-button>
+        </span>
+      </el-dialog>
+
+      <!-- 修改用户的对话框 -->
+      <el-dialog
+        title="修改用户"
+        :visible.sync="editDialogVisible"
+        width="50%"
+      >
+        <span>这是一段信息</span>
+        <span slot="footer" class="dialog-footer">
+          <el-button @click="editDialogVisible = false">取 消</el-button>
+          <el-button type="primary" @click="editDialogVisible = false"
             >确 定</el-button
           >
         </span>
@@ -119,6 +147,28 @@
 export default {
   name: 'Users',
   data() {
+    // 验证邮箱的规则
+    var checkEmail = (rules, value, cb) => {
+      const regEmail =
+        /^[a-zA-Z0-9_.-]+@[a-zA-Z0-9-]+(\.[a-zA-Z0-9-]+)*\.[a-zA-Z0-9]{2,6}$/
+      if (regEmail.test(value)) {
+        // 合法邮箱
+        return cb()
+      }
+
+      cb(new Error('请输入合法的邮箱'))
+    }
+    // 校验手机号的规则
+    var checkMobile = (rules, value, cb) => {
+      const regMobile = /^[1][3,4,5,7,8][0-9]{9}$/
+      if (regMobile.test(value)) {
+        // 合法手机号
+        return cb()
+      }
+
+      cb(new Error('请输入合法的手机号'))
+    }
+
     return {
       // 获取用户列表的参数对象
       queryInfo: {
@@ -129,10 +179,17 @@ export default {
       },
       userlist: [],
       total: 0,
-      //  用户对话框的显示与隐藏
+      //  添加用户对话框的显示与隐藏
       addDialogVisible: false,
+      //  修改用户对话框的显示与隐藏
+      editDialogVisible: false,
       // 添加用户的表单数据
-      addForm: {},
+      addForm: {
+        username: '',
+        password: '',
+        email: '',
+        mobile: '',
+      },
       // 添加表单的验证规则对象
       addFormRules: {
         username: [
@@ -144,7 +201,26 @@ export default {
             trigger: 'blur',
           },
         ],
+        password: [
+          { required: true, message: '请输入密码', trigger: 'blur' },
+          {
+            min: 5,
+            max: 16,
+            message: '密码的长度在5-16位之间',
+            trigger: 'blur',
+          },
+        ],
+        email: [
+          { required: true, message: '请输入邮箱', trigger: 'blur' },
+          { validator: checkEmail, trigger: 'blur' },
+        ],
+        mobile: [
+          { required: true, message: '请输入手机', trigger: 'blur' },
+          { validator: checkMobile, trigger: 'blur' },
+        ],
       },
+      // 保存查询信息
+      editForm:{},
     }
   },
   created() {
@@ -163,18 +239,52 @@ export default {
       console.log(res)
     },
 
+    // 点击按钮修改用户信息
+    async showEditDialog(id) {
+      const {data:res}=await this.$http.get('users/'+id)
+      if(res.meta.status!==200) {
+        return this.$message.error('查询用户信息失败!')
+      }
+      this.editForm=res.data
+      this.editDialogVisible=true
+    },
+
+    // 点击按钮，添加新用户
+    addUser() {
+      this.$refs.addFormRef.validate(async (valid) => {
+        if (!valid) return
+        // 可以发起添加用户的网络请求
+        const { data: res } = await this.$http.post('users', this.addForm)
+        if (res.meta.status !== 201) {
+          this.$message.error('添加用户失败!')
+        }
+        this.$message.success('添加用户成功!')
+        // 隐藏添加的对话框
+        this.addDialogVisible = false
+        // 刷新用户列表
+        this.getUserList()
+      })
+    },
+
+    // 监听添加用户对话框的关闭事件
+    addDialogClosed() {
+      this.$refs.addFormRef.resetFields()
+    },
+
     // 监听pagesize改变的事件
     handleSizeChange(newSize) {
       console.log(newSize)
       this.queryInfo.pagesize = newSize
       this.getUserList()
     },
+
     // 监听页码值改变的事件
     handleCurrentChange(newPage) {
       console.log(newPage)
       this.queryInfo.pagenum = newPage
       this.getUserList()
     },
+
     // 监听switch开关的状态的改变
     async userStateChanged(userinfo) {
       console.log(userinfo)
