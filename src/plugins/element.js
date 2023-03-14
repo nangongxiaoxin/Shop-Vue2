@@ -1,6 +1,6 @@
 import Vue from 'vue'
 
-import { Dialog, Pagination, Tooltip, Switch, Table, TableColumn, Row, Col, Card, Button, Form, FormItem, Input, Message, Container, Header, BreadcrumbItem, Breadcrumb, Aside, Main, Menu, Submenu, MenuItemGroup, MenuItem } from 'element-ui'
+import { MessageBox,Dialog, Pagination, Tooltip, Switch, Table, TableColumn, Row, Col, Card, Button, Form, FormItem, Input, Message, Container, Header, BreadcrumbItem, Breadcrumb, Aside, Main, Menu, Submenu, MenuItemGroup, MenuItem } from 'element-ui'
 
 Vue.use(Button)
 
@@ -30,3 +30,4 @@ Vue.use(Dialog)
 
 // $message是自定义属性
 Vue.prototype.$message = Message
+Vue.prototype.$confirm = MessageBox.confirm
