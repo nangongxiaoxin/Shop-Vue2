@@ -1,6 +1,6 @@
 import Vue from 'vue'
 
-import { MessageBox,Dialog, Pagination, Tooltip, Switch, Table, TableColumn, Row, Col, Card, Button, Form, FormItem, Input, Message, Container, Header, BreadcrumbItem, Breadcrumb, Aside, Main, Menu, Submenu, MenuItemGroup, MenuItem } from 'element-ui'
+import { Tag,MessageBox,Dialog, Pagination, Tooltip, Switch, Table, TableColumn, Row, Col, Card, Button, Form, FormItem, Input, Message, Container, Header, BreadcrumbItem, Breadcrumb, Aside, Main, Menu, Submenu, MenuItemGroup, MenuItem } from 'element-ui'
 
 Vue.use(Button)
 
@@ -27,6 +27,7 @@ Vue.use(Switch)
 Vue.use(Tooltip)
 Vue.use(Pagination)
 Vue.use(Dialog)
+Vue.use(Tag)
 
 // $message是自定义属性
 Vue.prototype.$message = Message
