@@ -22,14 +22,13 @@
         <el-table-column type="expand">
           <template slot-scope="scope">
             <el-row
-              :class="['bdbottom', i1 === 0 ? 'bdtop' : '','vcenter']"
+              :class="['bdbottom', i1 === 0 ? 'bdtop' : '', 'vcenter']"
               v-for="(item1, i1) in scope.row.children"
               :key="item1.id"
-              
             >
               <!-- 渲染一级权限 -->
               <el-col :span="5">
-                <el-tag>
+                <el-tag closable @close="removeRightById(scope.row, item1.id)">
                   {{ item1.authName }}
                 </el-tag>
                 <i class="el-icon-caret-right"></i>
@@ -38,15 +37,32 @@
               <!-- 渲染二级和三级权限 -->
               <el-col :span="19">
                 <!-- 通过for循环嵌套渲染二级权限 -->
-                <el-row :class="[i2==0?'':'bdtop','vcenter']" v-for="(item2,i2) in item1.children" :key="item2.id">
+                <el-row
+                  :class="[i2 == 0 ? '' : 'bdtop', 'vcenter']"
+                  v-for="(item2, i2) in item1.children"
+                  :key="item2.id"
+                >
                   <el-col :span="6">
-                    <el-tag type="success">{{ item2.authName }}</el-tag>
+                    <el-tag
+                      type="success"
+                      closable
+                      @close="removeRightById(scope.row, item2.id)"
+                      >{{ item2.authName }}</el-tag
+                    >
                     <i class="el-icon-caret-right"></i>
                   </el-col>
 
                   <!-- 一共24列？？？？？？ -->
                   <el-col :span="18">
-                    <el-tag type="warning" v-for="(item3,i3) in item2.children" :key="item3.id">{{ item3.authName }}</el-tag>
+                    <el-tag
+                      type="warning"
+                      v-for="(item3, i3) in item2.children"
+                      :key="item3.id"
+                      closable
+                      @close="removeRightById(scope.row, item3.id)"
+                    >
+                      {{ item3.authName }}
+                    </el-tag>
                   </el-col>
                 </el-row>
               </el-col>
@@ -67,13 +83,34 @@
             <el-button size="mini" type="danger" icon="el-icon-delete"
               >删除</el-button
             >
-            <el-button size="mini" type="warning" icon="el-icon-setting"
+            <el-button
+              size="mini"
+              type="warning"
+              icon="el-icon-setting"
+              @click="showSetRightDialog(scope.row)"
               >分配权限</el-button
             >
           </template>
         </el-table-column>
       </el-table>
     </el-card>
+
+    <!-- 分配权限对话框 -->
+    <el-dialog
+      title="分配权限"
+      :visible.sync="setRightDialogVisible"
+      width="50%"
+      @close="setRightDialogClosed"
+    >
+    <!-- 树形控件 -->
+    <el-tree :data="rightslist" :props="treeProps" show-checkbox node-key="id" default-expand-all :default-checked-keys="defKeys"></el-tree>
+      <span slot="footer" class="dialog-footer">
+        <el-button @click="setRightDialogVisible = false">取 消</el-button>
+        <el-button type="primary" @click="setRightDialogVisible = false"
+          >确 定</el-button
+        >
+      </span>
+    </el-dialog>
   </div>
 </template>
 
@@ -84,6 +121,17 @@ export default {
     return {
       // 所有角色列表区域数据
       rolelist: [],
+      // 控制分配权限对话框的显示与隐藏
+      setRightDialogVisible:false,
+      // 所有权限的数据
+      rightslist:[],
+      // 树形控件的属性绑定对象
+      treeProps:{
+        label:'authName',
+        children:'children'
+      },
+      // 默认选中的节点ID值数组
+      defKeys:[],
     }
   },
   created() {
@@ -101,6 +149,67 @@ export default {
 
       console.log(this.rolelist)
     },
+
+    // 根据id删除对应的权限
+    async removeRightById(role, rightId) {
+      // 弹框确认
+      const confirmResult = await this.$confirm(
+        '此操作将永久删除该文件, 是否继续?',
+        '提示',
+        {
+          confirmButtonText: '确定',
+          cancelButtonText: '取消',
+          type: 'warning',
+        }
+      ).catch((err) => err)
+
+      if (confirmResult !== 'confirm') {
+        return this.$message.info('取消了删除！')
+      }
+
+      const { data: res } = await this.$http.delete(
+        `roles/${role.id}/rights/${rightId}`
+      )
+      if (res.meta.status !== 200) {
+        return this.$message.error('删除权限失败')
+      }
+
+      // this.getRolesList()
+      role.children = res.data
+    },
+
+    // 展示分配权限的对话框
+    async showSetRightDialog(role) {
+      // 获取所有权限数据
+      const {data:res} =await this.$http.get('rights/tree')
+
+      if(res.meta.status !=200){
+        return this.$message.error('获取权限数据失败！')
+      }
+
+      //把获取到的权限数据保存到data中
+      this.rightslist=res.data
+
+      // 递归获取三级节点的Id
+      this.getLeafKeys(role,this.defKeys)
+
+      this.setRightDialogVisible=true
+    },
+
+    // 通过递归的形式，获取角色下所有的三级权限的ID，并保存到defKeys数组中
+    getLeafKeys(node,arr){
+      // 如果当前node节点不包含children属性，则是三级权限
+      if(!node.children){
+        return arr.push(node.id)
+      }
+
+      node.children.forEach(item=>this.getLeafKeys(item,arr));
+    },
+
+    // 监听分配权限对话框的关闭事件
+    setRightDialogClosed(){
+      this.defKeys=[]
+    }
   },
 }
 </script>
@@ -119,7 +228,7 @@ export default {
 }
 
 // 权限显示居中
-.vcenter{
+.vcenter {
   display: flex;
   align-items: center;
 }
