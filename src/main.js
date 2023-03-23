@@ -9,6 +9,10 @@ import './assets/fonts/iconfont.css'
 import './assets/css/global.css'
 Vue.config.productionTip = false
 
+// 
+import TreeTable from 'vue-table-with-tree-grid'
+Vue.component('tree-table',TreeTable)
+
 // 使用axios
 import axios from 'axios'
 Vue.prototype.$http = axios
