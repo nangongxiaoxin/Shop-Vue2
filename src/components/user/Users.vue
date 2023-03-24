@@ -429,7 +429,7 @@ export default {
 
       const { data: res } = await this.$http.delete('users/' + id)
       if (res.meta.status !== 200) {
-        return this.$message.err('删除用户失败')
+        return this.$message.error('删除用户失败')
       }
 
       this.$message.success('删除用户成功')
