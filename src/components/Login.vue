@@ -5,6 +5,10 @@
       <div class="avater_box">
         <img src="../assets/logo.png" alt="" />
       </div>
+      
+      <span class="login_lable">
+        <h3>登 录</h3>
+      </span>
 
       <!-- 登录表单 -->
       <el-form
@@ -124,7 +128,7 @@ export default {
 
 .login_box {
   width: 450px;
-  height: 300px;
+  height: 340px;
   background-color: #fff;
   border-radius: 3px;
   position: absolute;
@@ -163,5 +167,12 @@ export default {
 .btns {
   display: flex;
   justify-content: flex-end;
+}
+
+.login_lable{
+  position: absolute;
+  top: 30%;
+  left: 50%;
+  transform: translate(-50%, -50%);
 }
 </style>
