@@ -35,17 +35,59 @@
         <!-- 添加动态参数的面板 -->
         <el-tab-pane label="动态参数" name="many">
           <!-- 添加参数的按钮 -->
-          <el-button type="primary" size="mini" :disabled="isBtnDisabled"
-            >添加参数</el-button
-          >
+          <el-button type="primary" size="mini" :disabled="isBtnDisabled">
+            添加参数
+          </el-button>
+          <!-- 动态参数表格 -->
+          <el-table :data="manyTableData" border stripe>
+            <!-- 展开行 -->
+            <el-table-column type="expand"></el-table-column>
+            <!-- 索引列 -->
+            <el-table-column type="index"></el-table-column>
+            <el-table-column
+              label="参数名称"
+              prop="attr_name"
+            ></el-table-column>
+            <el-table-column label="操作">
+              <template slot-scope="scope">
+                <el-button type="primary" size="mini" icon="el-icon-edit"
+                  >编辑</el-button
+                >
+                <el-button type="danger" size="mini" icon="el-icon-delete"
+                  >删除</el-button
+                >
+              </template>
+            </el-table-column>
+          </el-table>
         </el-tab-pane>
 
         <!-- 添加静态属性的面板 -->
         <el-tab-pane label="静态属性" name="only">
           <!-- 添加属性的按钮 -->
-          <el-button type="primary" size="mini" :disabled="isBtnDisabled"
-            >添加属性</el-button
-          >
+          <el-button type="primary" size="mini" :disabled="isBtnDisabled">
+            添加属性
+          </el-button>
+          <!-- 静态参数表格 -->
+          <el-table :data="onlyTableData" border stripe>
+            <!-- 展开行 -->
+            <el-table-column type="expand"></el-table-column>
+            <!-- 索引列 -->
+            <el-table-column type="index"></el-table-column>
+            <el-table-column
+              label="属性名称"
+              prop="attr_name"
+            ></el-table-column>
+            <el-table-column label="操作">
+              <template slot-scope="scope">
+                <el-button type="primary" size="mini" icon="el-icon-edit"
+                  >编辑</el-button
+                >
+                <el-button type="danger" size="mini" icon="el-icon-delete"
+                  >删除</el-button
+                >
+              </template>
+            </el-table-column>
+          </el-table>
         </el-tab-pane>
       </el-tabs>
     </el-card>
@@ -71,9 +113,9 @@ export default {
       // 被激活的页签的名称
       activeName: 'many',
       // 动态参数的数据
-      manyTableData:[],
+      manyTableData: [],
       // 静态属性的数据
-      onlyTableData:[]
+      onlyTableData: [],
     }
   },
   created() {
@@ -120,10 +162,10 @@ export default {
 
       // console.log(res.data)
 
-      if(this.activeName==='many'){
-        this.manyTableData=res.data
-      }else{
-        this.onlyTableData=res.data
+      if (this.activeName === 'many') {
+        this.manyTableData = res.data
+      } else {
+        this.onlyTableData = res.data
       }
     },
   },
