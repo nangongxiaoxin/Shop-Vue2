@@ -41,7 +41,12 @@
         label-width="100px"
         label-position="top"
       >
-        <el-tabs :tab-position="'left'" v-model="acticveIndex">
+        <el-tabs
+          :tab-position="'left'"
+          v-model="acticveIndex"
+          :before-leave="beforeTabLeave"
+          @tab-click="tabClicked"
+        >
           <el-tab-pane label="基本信息" name="0">
             <el-form-item label="商品名称" prop="goods_name">
               <el-input v-model="addForm.goods_name"></el-input>
@@ -56,9 +61,9 @@
               <el-input v-model="addForm.goods_number" type="number"></el-input>
             </el-form-item>
 
-            <el-form-item label="商品分类" prop="">
+            <el-form-item label="商品分类" prop="goods_cat">
               <el-cascader
-                v-model="value"
+                v-model="addForm.goods_cat"
                 :options="cateList"
                 :props="cateProps"
                 @change="handleChange"
@@ -66,9 +71,49 @@
               </el-cascader>
             </el-form-item>
           </el-tab-pane>
-          <el-tab-pane label="商品参数" name="1">商品参数</el-tab-pane>
-          <el-tab-pane label="商品属性" name="2">商品属性</el-tab-pane>
-          <el-tab-pane label="商品图片" name="3">商品图片</el-tab-pane>
+
+          <el-tab-pane label="商品参数" name="1">
+            <!-- 渲染表单的Item项 -->
+            <el-form-item
+              :label="item.attr_name"
+              v-for="item in manyTableData"
+              :key="item.attr_id"
+            >
+              <!-- 复选框组 -->
+              <el-checkbox-group v-model="item.attr_vals">
+                <el-checkbox
+                  :label="cb"
+                  v-for="(cb, i) in item.attr_vals"
+                  :key="i"
+                  border
+                ></el-checkbox>
+              </el-checkbox-group>
+            </el-form-item>
+          </el-tab-pane>
+
+          <el-tab-pane label="商品属性" name="2">
+            <el-form-item
+              :label="item.attr_name"
+              v-for="item in onlyTableData"
+              :key="item.attr_id"
+            >
+              <el-input v-model="item.attr_vals"></el-input>
+            </el-form-item>
+          </el-tab-pane>
+
+          <el-tab-pane label="商品图片" name="3">
+            <!-- action表示要上传的后台api地址 -->
+            <el-upload 
+              :action="uploadURL"
+              :on-preview="handlePreview"
+              :on-remove="handleRemove"
+              list-type="picture"
+              :headers="headerObj"
+            >
+              <el-button size="small" type="primary">点击上传</el-button>
+            </el-upload>
+          </el-tab-pane>
+
           <el-tab-pane label="商品属性" name="4">商品内容</el-tab-pane>
         </el-tabs>
       </el-form>
@@ -105,6 +150,9 @@ export default {
         goods_number: [
           { required: true, message: '请输入商品数量', trigger: 'blur' },
         ],
+        goods_cat: [
+          { required: true, message: '请选择商品分类', trigger: 'blur' },
+        ],
       },
       // 分类列表数据
       cateList: [],
@@ -114,6 +162,16 @@ export default {
         label: 'cat_name',
         children: 'children',
         expandTrigger: 'hover',
+      },
+      //动态参数列表数据
+      manyTableData: [],
+      //静态属性列表数据
+      onlyTableData: [],
+      // 上传图片的API
+      uploadURL: 'http://127.0.0.1:8888/api/private/v1/upload',
+      // 上传图片的请求头
+      headerObj: {
+        Authorization: window.sessionStorage.getItem('token')
       },
     }
   },
@@ -131,9 +189,86 @@ export default {
 
       // console.log(this.cateList)
     },
+    // 级联选择器的change事件处理函数
+    handleChange() {
+      // console.log(this.addForm.goods_cat)
+      if (this.addForm.goods_cat.length !== 3) {
+        this.$message.error('请选择三级分类！')
+        this.addForm.goods_cat = []
+      }
+    },
+    // tab栏切换前的钩子函数
+    beforeTabLeave(activeName, oldActiveName) {
+      if (oldActiveName === '0' && this.addForm.goods_cat.length !== 3) {
+        this.$message.error('请选择商品分类！')
+        return false
+      }
+    },
+    // tab栏点击事件处理函数
+    async tabClicked() {
+      //证明访问的是动态参数面板
+      if (this.acticveIndex === '1') {
+        const { data: res } = await this.$http.get(
+          `categories/${this.cateId}/attributes`,
+          {
+            params: {
+              sel: 'many',
+            },
+          }
+        )
+
+        if (res.meta.status !== 200) {
+          return this.$message.error('获取动态参数列表失败！')
+        }
+
+        // console.log(res.data)
+        res.data.forEach((item) => {
+          item.attr_vals =
+            item.attr_vals.length === 0 ? [] : item.attr_vals.split(' ')
+        })
+        // console.log(res.data)
+
+        this.manyTableData = res.data
+      } else if (this.acticveIndex === '2') {
+        const { data: res } = await this.$http.get(
+          `categories/${this.cateId}/attributes`,
+          {
+            params: {
+              sel: 'only',
+            },
+          }
+        )
+
+        if (res.meta.status !== 200) {
+          return this.$message.error('获取静态参数列表失败！')
+        }
+
+        // console.log(res.data)
+        this.onlyTableData = res.data
+      }
+    },
+    // 图片预览的事件处理函数
+    handlePreview(file) {
+      console.log(file)
+    },
+    // 图片移除的事件处理函数
+    handleRemove(file, fileList) {
+      console.log(file, fileList)
+    },
+  },
+  computed: {
+    cateId() {
+      if (this.addForm.goods_cat.length === 3) {
+        return this.addForm.goods_cat[2]
+      }
+      return null
+    },
   },
 }
 </script>
 
 <style lang="less" scoped>
+.el-checkbox {
+  margin: 0 10px 0 0 !important;
+}
 </style>
