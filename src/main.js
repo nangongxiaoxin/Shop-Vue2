@@ -20,9 +20,19 @@ Vue.component('tree-table',TreeTable)
 import axios from 'axios'
 Vue.prototype.$http = axios
 
+//edit 富文本编辑器
+import VueQuillEditor from 'vue-quill-editor'
+// 富文本编辑器对应的样式表
+import 'quill/dist/quill.core.css' // import styles
+import 'quill/dist/quill.snow.css' // for snow theme
+import 'quill/dist/quill.bubble.css' // for bubble theme
+// 注册为全局可用的组件
+Vue.use(VueQuillEditor)
+
 // 配置根路径
 // 本地测试
 axios.defaults.baseURL = 'http://127.0.0.1:8888/api/private/v1/'
+// axios.defaults.baseURL = 'http://43.143.0.76:8889/api/private/v1/'
 
 // php测试
 // axios.defaults.baseURL='http://106.54.162.248/'

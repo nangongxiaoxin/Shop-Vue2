@@ -103,25 +103,40 @@
 
           <el-tab-pane label="商品图片" name="3">
             <!-- action表示要上传的后台api地址 -->
-            <el-upload 
+            <el-upload
               :action="uploadURL"
               :on-preview="handlePreview"
               :on-remove="handleRemove"
               list-type="picture"
               :headers="headerObj"
+              :on-success="handleSuccess"
             >
               <el-button size="small" type="primary">点击上传</el-button>
             </el-upload>
           </el-tab-pane>
 
-          <el-tab-pane label="商品属性" name="4">商品内容</el-tab-pane>
+          <el-tab-pane label="商品内容" name="4">
+            <!-- 富文本编辑器 -->
+            <quill-editor v-model="addForm.goods_introduce"></quill-editor>
+            <!-- 添加商品的按钮 -->
+            <el-button type="primary" class="btnAdd" @click="add"
+              >添加商品</el-button
+            >
+          </el-tab-pane>
         </el-tabs>
       </el-form>
     </el-card>
+
+    <!-- 图片预览 -->
+    <el-dialog title="图片预览" :visible.sync="previewVisible" width="50%">
+      <img :src="previewPath" alt="" style="width: 100%" class="priviewImg" />
+    </el-dialog>
   </div>
 </template>
 
 <script>
+import _ from 'lodash'
+
 export default {
   name: 'Add',
   data() {
@@ -135,6 +150,11 @@ export default {
         goods_number: 0,
         //商品所属的分类数组
         goods_cat: [],
+        // 图片的数组
+        pics: [],
+        // 商品的描述
+        goods_introduce: '',
+        attrs: [],
       },
       // 添加商品的表单验证规则对象
       addRormRules: {
@@ -171,8 +191,11 @@ export default {
       uploadURL: 'http://127.0.0.1:8888/api/private/v1/upload',
       // 上传图片的请求头
       headerObj: {
-        Authorization: window.sessionStorage.getItem('token')
+        Authorization: window.sessionStorage.getItem('token'),
       },
+      //
+      previewPath: '',
+      previewVisible: false,
     }
   },
   created() {
@@ -249,11 +272,72 @@ export default {
     },
     // 图片预览的事件处理函数
     handlePreview(file) {
-      console.log(file)
+      this.previewPath = file.response.data.url
+      this.previewVisible = true
     },
     // 图片移除的事件处理函数
-    handleRemove(file, fileList) {
-      console.log(file, fileList)
+    handleRemove(file) {
+      // 获取将要删除的路径
+      const filePath = file.response.data.tmp_path
+      // 从数组中找到对应的图片信息对象
+      const i = this.addForm.pics.findIndex((item) => item.pic === filePath)
+      // 调用splice方法删除
+      this.addForm.pics.splice(i, 1)
+    },
+    // 图片上传成功的事件处理函数
+    handleSuccess(response) {
+      // 1.拼接得到一个图片信息对象
+      const picinfo = {
+        pic: response.data.tmp_path,
+      }
+      // 2.将图片信息对象push到pics数组中
+      this.addForm.pics.push(picinfo)
+      // console.log(this.addForm)
+    },
+    // 添加商品按钮
+    add() {
+      // 表单验证
+      this.$refs.addFormRef.validate(async (valid) => {
+        if (!valid) {
+          return this.$message.error('请完善商品信息！')
+        }
+
+        // 添加的业务逻辑
+        // lodash cloneDeep(obj)
+        const form = _.cloneDeep(this.addForm)
+        form.goods_cat = form.goods_cat.join(',')
+        // console.log(form)
+        // 处理动态参数
+        this.manyTableData.forEach((item) => {
+          const newInfo = {
+            attr_id: item.attr_id,
+            attr_value: item.attr_vals.join(' '),
+          }
+          this.addForm.attrs.push(newInfo)
+        })
+        // 处理静态属性
+        this.onlyTableData.forEach((item) => {
+          const newInfo = {
+            attr_id: item.attr_id,
+            attr_value: item.attr_vals,
+          }
+          this.addForm.attrs.push(newInfo)
+        })
+
+        form.attrs = this.addForm.attrs
+        console.log(form)
+
+        // 发起请求添加商品
+        // 商品的名称，必须是唯一的
+        const {data:res}= await this.$http.post('goods', form)
+
+        if(res.meta.status!==201){
+          return this.$message.error('添加商品失败！')
+        }
+
+        this.$message.success('添加商品成功！')
+        this.$router.push('/goods')
+      })
     },
   },
   computed: {
@@ -270,5 +354,13 @@ export default {
 <style lang="less" scoped>
 .el-checkbox {
   margin: 0 10px 0 0 !important;
+}
+
+.priviewImg {
+  width: 100%;
+}
+
+.btnAdd {
+  margin-top: 15px;
 }
 </style>
