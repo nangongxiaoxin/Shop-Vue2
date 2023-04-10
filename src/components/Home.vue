@@ -1,7 +1,3 @@
-HOME.vue
-
-
-
 <template>
   <el-container class="home-container">
     <!-- 头部 -->

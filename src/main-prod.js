@@ -1,7 +1,9 @@
 import Vue from 'vue'
 import App from './App.vue'
 import router from './router'
-import './plugins/element.js'
+
+// index导入cdn连接
+// import './plugins/element.js'
 
 
 import 'default-passive-events'
@@ -22,10 +24,12 @@ Vue.prototype.$http = axios
 
 //edit 富文本编辑器
 import VueQuillEditor from 'vue-quill-editor'
-// 富文本编辑器对应的样式表
-import 'quill/dist/quill.core.css' // import styles
-import 'quill/dist/quill.snow.css' // for snow theme
-import 'quill/dist/quill.bubble.css' // for bubble theme
+// 富文本编辑器对应的样式表 采用cdn替换 在index.html中引入
+// import 'quill/dist/quill.core.css' // import styles
+// import 'quill/dist/quill.snow.css' // for snow theme
+// import 'quill/dist/quill.bubble.css' // for bubble theme
+
+
 // 注册为全局可用的组件
 Vue.use(VueQuillEditor)
 
