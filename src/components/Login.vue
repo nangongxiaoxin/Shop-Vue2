@@ -89,7 +89,6 @@ export default {
       // 预校验 valid表示结果
       this.$refs.loginFormRef.validate(async (valid) => {
         if (!valid) return
-
         // php测试
         // const { data: res } = await this.$http.post('login.php', this.loginForm);
         // if (res.CODE != 200) {
@@ -98,7 +97,6 @@ export default {
         //     console.log('登录成功');
         //     this.$message.success('登陆成功！')
         // }
-
         //本地测试
         const { data: res } = await this.$http.post('login', this.loginForm)
         if (res.meta.status != 200) {
@@ -107,7 +105,6 @@ export default {
           console.log('登录成功')
           this.$message.success('登陆成功！')
         }
-
         // 设置session
         window.sessionStorage.setItem('token', res.data.token)
         // // 设置cookie
